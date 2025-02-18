@@ -25,3 +25,11 @@ export const existeUsuarioById = async(id = '') =>{
         throw new Error (`El Id ${id} no existe`);
     }
 }
+
+export const existeClassById = async (id = '') => {
+    const existeClass = await Class.findById(id);
+
+    if (!existeClass) {
+        throw new Error(`El ID ${id} no existe en la base de datos`);
+    }
+};
