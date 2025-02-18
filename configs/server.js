@@ -23,7 +23,7 @@ const middlewares = (app) => {
 const routes = (app) =>{
     app.use("/adminCentroEducativo/v1/auth", authRoutes);
     app.use("/adminCentroEducativo/v1/users", userRoutes);
-    app.use("/adoptionSystem/v1/class", classRouters);
+    app.use("/adminCentroEducativo/v1/class", classRouters);
 
 }
 

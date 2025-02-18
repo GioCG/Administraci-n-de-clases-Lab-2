@@ -1,83 +1,70 @@
 import Usuario from '../user/user.model.js';
+import Class from '../user/user.model.js';
 import { hash, verify } from 'argon2';
 import { generarJWT} from '../helpers/generate-jwt.js';
 
 export const login = async (req, res) => {
-
-    const { email, password, username } = req.body;
-
     try {
-        
-        const lowerEmail = email ? email.toLowerCase() : null;
-        const lowerUsername = username ? username.toLowerCase() : null;
+        const { email, name, password } = req.body;
 
         const user = await Usuario.findOne({
-            $or: [{ email: lowerEmail }, { username: lowerUsername }]
+            $or: [{ email: email?.toLowerCase() }, { name }]
         });
 
-        if(!user){
-            return res.status(400).json({
-                msg: 'Credenciales incorrectas, Correo no existe en la base de datos'
-            });
-        }
-
-        if(!user.estado){
-            return res.status(400).json({
-                msg: 'El usuario no existe en la base de datos'
-            });
+        if (!user || !user.estado) {
+            return res.status(400).json({ msg: 'Credenciales incorrectas o usuario inactivo' });
         }
 
         const validPassword = await verify(user.password, password);
-        if(!validPassword){
-            return res.status(400).json({
-                msg: 'La contraseña es incorrecta'
-            });
+        if (!validPassword) {
+            return res.status(400).json({ msg: 'Contraseña incorrecta' });
         }
 
-        const token = await generarJWT( user.id );
+        const token = await generarJWT(user.id, user.role);
 
         return res.status(200).json({
-            msg: 'Inicio de sesión exitoso!!',
+            msg: 'Inicio de sesión exitoso',
             userDetails: {
                 username: user.username,
-                token: token,
-                profilePicture: user.profilePicture
+                role: user.role,
+                token
             }
-        })
+        });
 
     } catch (e) {
-        
-        console.log(e);
-
+        console.error(e);
         return res.status(500).json({
-            message: "Server error",
+            message: "Error en el servidor",
             error: e.message
-        })
+        });
     }
-}
+};
 
 export const registerStudent = async (req, res) => {
     try {
-        const data = req.body;
-        const encryptedPassword = await hash (data.password);
+        const { name, surname, email, password } = req.body;
+
+        const encryptedPassword = await hash (password);
+
         const user = await Usuario.create({
-            name: data.name,
-            email: data.email,
+            name,
+            surname,
+            email: email.toLowerCase(),
             password: encryptedPassword,
             role: "STUDENT_ROLE",
             })
 
-        return res.satus(201).json({
-            message: "User registered successfully",
+        return res.status(201).json({
+            message: "Student registered successfully",
             userDetails: {
-                user: user.email
+                student: user.name
             }
         });
 
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            message: "User registration failed",
+            message: "Student registration failed",
             error: error.message
         })
     }
@@ -85,22 +72,22 @@ export const registerStudent = async (req, res) => {
 
 export const registerTeacher = async (req, res) => {
 try {
-        const data = req.body;
+        const { name, surname, email, password } = req.body;
 
-        const encryptedPassword = await hash (data.password);
+        const encryptedPassword = await hash (password);
 
         const user = await Usuario.create({
-            name: data.name,
-            email: data.email,
+            name,
+            surname,
+            email: email.toLowerCase(),
             password: encryptedPassword,
-            role: data.role || "STUDENT_ROLE",
-            class: data.class
+            role: "TEACHER_ROLE"
             })
 
-        return res.satus(201).json({
-            message: "User registered successfully",
+        return res.status(201).json({
+            message: "Teacher registered successfully",
             userDetails: {
-                user: user.email
+                Teacher: user.name
             }
         });
 
@@ -109,7 +96,7 @@ try {
         console.log(error);
 
         return res.status(500).json({
-            message: "User registration failed",
+            message: "Teacher registration failed",
             error: error.message
         })
 

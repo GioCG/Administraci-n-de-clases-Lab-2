@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerValidator, loginValidator } from "../middlewares/validator.js";
+import { registerStudentValidator,registerTeacherValidator, loginValidator } from "../middlewares/validator.js";
 import { login,registerStudent,registerTeacher } from "../auth/auth.controller.js";
 import {deleteFileOnError} from "../middlewares/delete-file-on-error.js"
 import {uploadProfilePicture} from "../middlewares/multer-upload.js"
@@ -16,7 +16,7 @@ router.post(
 router.post(
     '/registerStudent',
     uploadProfilePicture.single("profilePicture"),
-    registerValidator,
+    registerStudentValidator,
     deleteFileOnError,
     registerStudent
 );
@@ -24,7 +24,7 @@ router.post(
 router.post(
     '/registerTeacher',
     uploadProfilePicture.single("profilePicture"),
-    registerValidator,
+    registerTeacherValidator,
     deleteFileOnError,
     registerTeacher
 );

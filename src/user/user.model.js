@@ -2,19 +2,29 @@ import { Schema, model } from "mongoose";
 
 const UserSchema = Schema({
     name: { type: String, required: true },
+    surname:{type: String, require:true},
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, enum: ['TEACHER_ROLE', 'STUDENT_ROLE'], required: true },
-});
+    password: { type: String, required: [true, "Password required"], minLength: 8, },
+    role: { type: String, enum: ['TEACHER_ROLE', 'STUDENT_ROLE'], default:"STUDENT_ROLE"},
+    class: [{type: Schema.Types.ObjectId, ref: "Course",},],
+    enrolledCourses: [{type: Schema.Types.ObjectId,ref: "Course",
+        validate: [
+            {
+              validator: function (val) {
+                return val.length <= 3; 
+              },
+              message: "Un estudiante solo puede estar inscrito en un máximo de 3 cursos",
+            },
+        ],},],
+    estado: {type: Boolean,default: true,},
+    },
+    {timestamps: true,versionKey: false,});
 
-UserSchema.pre('save', async function (next) {
-    if (!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password, 10);
-    next();
-});
 
-UserSchema.methods.comparePassword = async function (candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+UserSchema.methods.toJSON = function () {
+  const { __v, password, _id, ...usuario } = this.toObject();
+  usuario.uid = _id;
+  return usuario;
 };
 
-export default model('User', UserSchema);
+export default model("User", UserSchema);
